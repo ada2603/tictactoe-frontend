@@ -5,9 +5,14 @@
 */
 
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import _ from 'lodash';
+import { Redirect } from 'react-router-dom';
 
+import gameAction from '../redux/game/actions';
 import '../static/App.css';
+
+const { newgame, updategame, logmoves } = gameAction;
 
 const initialState = {
     player_1_moves: [],
@@ -31,6 +36,7 @@ class Game extends Component {
   reset = () => {
     const state = _.cloneDeep(initialState)
     this.setState(state);
+    this.props.newgame();
   }
   newMove = (x, y, c) => {
     const isMyTurn = this.state.isMyTurn;
@@ -38,6 +44,12 @@ class Game extends Component {
     const moveIndex = _.indexOf(Object.keys(possibleMoves), c.toString());
 
     if (isMyTurn && moveIndex > -1 ) {
+      this.props.logmoves({
+        id: this.props.Game.game.id,
+        move: c.toString(),
+        player_1: this.props.Game.game.player_1
+      });
+
       delete possibleMoves[c];
       
       let eliminateMoves = this.state.eliminateMoves;
@@ -56,6 +68,11 @@ class Game extends Component {
       });
       if (moves.length > 2 && this.isWin(moves, true)) {
         alert("You Win!");
+        this.props.updategame({
+          id: this.props.Game.game.id,
+          status: 1,
+          player_1_status: 1
+        });
       } else {
         this.nextMove(c);
       }
@@ -95,8 +112,18 @@ class Game extends Component {
       board,
       possibleMoves,
     });
+    this.props.logmoves({
+      id: this.props.Game.game.id,
+      move: nextMove.toString(),
+      player_2: 0
+    });
     if (moves.length > 2 && this.isWin(moves, false)) {
         alert("You Lose!");
+        this.props.updategame({
+          id: this.props.Game.game.id,
+          status: 1,
+          player_1_status: 2
+        });
     } else {
       this.setState({
           isMyTurn: true,
@@ -115,9 +142,19 @@ class Game extends Component {
     return status;
   }
 
+  componentWillMount() {
+    const { isLoggedIn, newgame } = this.props
+    if (isLoggedIn) {
+      newgame();
+    }
+  }
+
   render() {
     const that = this;
-    
+    const to = { pathname: '/' };
+    if (!this.props.isLoggedIn) {
+      return <Redirect to={to} />;
+    }
     return (
       <div className="app">
         <header className="header">
@@ -144,4 +181,12 @@ class Game extends Component {
   }
 }
 
-export default Game;
+export default connect(
+  state => ({
+    isLoggedIn: state.Auth.get('idToken') !== null ? true : false,
+    Game: state.Game.toJS(),
+    Auth: state.Auth.toJS(),
+  }),
+  { newgame, updategame, logmoves }
+)(Game);
+

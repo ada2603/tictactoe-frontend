@@ -1,3 +1,9 @@
+/*
+** Created on Oct 31, 2018
+**
+** @author: Ha Do
+*/
+
 import React from 'react';
 import { Route, Redirect } from 'react-router-dom';
 import { ConnectedRouter } from 'react-router-redux';
@@ -33,10 +39,9 @@ const PublicRoutes = ({ history, isLoggedIn }) => {
           path={'/404'}
           component={asyncComponent(() => import('./containers/NotFound'))}
         />
-        <RestrictedRoute
+        <Route
           path="/game"
           component={Game}
-          isLoggedIn={isLoggedIn}
         />
       </div>
     </ConnectedRouter>

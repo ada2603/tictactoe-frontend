@@ -5,6 +5,7 @@
 */
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { Redirect } from 'react-router-dom';
 
 import authAction from '../redux/auth/actions';
 import '../static/App.css';
@@ -12,25 +13,31 @@ import '../static/App.css';
 const { login, logout } = authAction;
 
 class Main extends Component {
-
-  handleLogin = () => {
-    const { login } = this.props;
-    login();
-  };
-  handleLogout = () => {
-    const { logout } = this.props;
-    logout();
-  };
-
+  state = {
+    isLoggedIn: false
+  }
   newGame = ( multiplayer ) => {
+    this.props.history.push('/game');
+  }
+  componentWillMount() {
     const { isLoggedIn, login } = this.props
     if (!isLoggedIn) {
       login();
     }
-    this.props.history.push('/game');
+  }
+  componentWillReceiveProps(nextProps) {
+    if (this.props.Auth.isLoggedIn !== nextProps.Auth.isLoggedIn && nextProps.Auth.isLoggedIn === true) {
+      this.setState({
+        isLoggedIn: true
+      });
+    }
   }
 
   render() {
+    const to = { pathname: '/game' };
+    if (this.state.isLoggedIn) {
+      return <Redirect to={to} />;
+    }
     return (
       <div className="app">
         <header className="header">
